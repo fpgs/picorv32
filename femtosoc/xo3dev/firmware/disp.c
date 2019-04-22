@@ -102,6 +102,41 @@ int32_t disp_hex(uint32_t x, uint32_t y, uint32_t data){
     return 0x00;
 }
 
+int32_t disp_chr(uint32_t x, uint32_t y, uint8_t ascii){
+    i2c_wbyte(I2C_START, DISP_I2C_ADDR);
+    i2c_wbyte(I2C_WRITE, DISP_COMMAND); 
+    i2c_wbyte(I2C_WRITE, (0xB0|y));  // Page y
+    i2c_stop();
+    i2c_wbyte(I2C_START, DISP_I2C_ADDR);
+    i2c_wbyte(I2C_WRITE, DISP_COMMAND); 
+    i2c_wbyte(I2C_WRITE, (0x10|((x>>4)&0x0F)));  // Column x high nibble
+    i2c_stop();
+    i2c_wbyte(I2C_START, DISP_I2C_ADDR);
+    i2c_wbyte(I2C_WRITE, DISP_COMMAND); 
+    i2c_wbyte(I2C_WRITE, (x&0x0F));  // Column x low nibble
+    i2c_stop();
+    int32_t need_page, start_index, j;
+        start_index = ((ascii & 1)<<3);  // odd bytes start at the 8th byte in the page
+        need_page = (ascii>>1)+DISP_1ST_PAGE; // two characters per page
+        // check to see if the buffer has the data you need before reading UFM
+        if (disp_font_page != need_page) {  
+            ufm_read_page(need_page, disp_font_buf);
+            disp_font_page = need_page;
+        }
+        for (j= start_index; j < (start_index+5); j++){
+            i2c_wbyte(I2C_START, DISP_I2C_ADDR);
+            i2c_wbyte(I2C_WRITE, DISP_DATA); 
+            i2c_wbyte(I2C_WRITE, (disp_font_buf[j]));  // font data from buffer
+            i2c_stop();
+        }
+        i2c_wbyte(I2C_START, DISP_I2C_ADDR);
+        i2c_wbyte(I2C_WRITE, DISP_DATA); 
+        i2c_wbyte(I2C_WRITE, 0x00);  
+        i2c_stop();
+
+    return 0x00;
+}
+
 int32_t disp_str(uint32_t x, uint32_t y, uint8_t *ascii, uint32_t cnt){
     i2c_wbyte(I2C_START, DISP_I2C_ADDR);
     i2c_wbyte(I2C_WRITE, DISP_COMMAND); 

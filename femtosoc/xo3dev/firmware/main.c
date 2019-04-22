@@ -25,7 +25,8 @@ void delay_ms(int32_t ms) {
 }
 
 void main() {
-    int32_t i;
+    int32_t i,j;
+    uint8_t ascii_str[16];
     REG_LEDS = 0xFB;
     i2c_init(EFB);
     ufm_init(EFB);
@@ -33,22 +34,17 @@ void main() {
     REG_LEDS = 0xD0;
     disp_init();
     disp_fill(0x00);
-    disp_hex(0, 7, 0xDEADBEEF);
-    disp_hex(0, 5, 0x01234567);
-    disp_hex(48, 5, 0x89ABCDEF);
-    uint8_t ascii_str[16] = {0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F};
-    disp_str(0, 3, ascii_str, 16);
-    for (i=0; i <16; i++) {
-        ascii_str[i] += 0x10;
+    for (j=0; j < 8 ; j++) {
+        for (i=0; i <16; i++) {
+            ascii_str[i] = (j<<4)+i;
+        }
+        disp_str(0, j, ascii_str, 16);
     }
-    disp_str(0, 2, ascii_str, 16);
-    for (i=0; i <16; i++) {
-        ascii_str[i] += 0x10;
-    }
-    disp_str(0, 1, ascii_str, 16);
-
     
     delay_ms(1000);
+    disp_chr(48, 7, ' ');
+    delay_ms(1000);
+
     i = -1;
     while(1) {
         i += 1;
